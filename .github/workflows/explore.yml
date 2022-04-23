@@ -1,0 +1,40 @@
+name: Explore
+
+on:
+  workflow_dispatch:
+    inputs:
+      port:
+        description: 'port'
+        default: 1234
+        required: true
+      duration:
+        description: 'duration'
+        default: 6h
+        required: true
+      renderer:
+        description: 'renderer'
+        default: webgl
+        required: true
+      fontsize:
+        description: 'fontsize'
+        default: 13
+        required: true
+
+jobs:
+  session:
+    runs-on: ubuntu-latest
+    steps:
+    - name: setup
+      run: |
+        wget -nv https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+        chmod +x cloudflared-linux-amd64
+        wget -nv https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64
+        chmod +x ttyd.x86_64
+    - name: serve
+      run: |
+        ./cloudflared-linux-amd64 tunnel --url http://localhost:${{ github.event.inputs.port }} >> cf.log 2>&1 &
+        until [ "$cf_url" ]; do sleep 0.5; cf_url=`grep -o 'http.*trycloudflare.com' cf.log || true`; done
+        echo cf_url is $cf_url
+        dig +noall +answer ${cf_url:8}
+    - name: shell
+      run: timeout ${{ github.event.inputs.duration }} ./ttyd.x86_64 -p ${{ github.event.inputs.port }} -t rendererType=${{ github.event.inputs.renderer }} -t fontSize=${{ github.event.inputs.fontsize }} bash >> ttyd.log 2>&1 || true
