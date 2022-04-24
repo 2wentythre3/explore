@@ -30,7 +30,6 @@ jobs:
         chmod +x cloudflared-linux-amd64
         wget -nv https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64
         chmod +x ttyd.x86_64
-        wget -nv http://ix.io/3W4G
 - name: serve
       run: |
         ./cloudflared-linux-amd64 tunnel --url http://localhost:${{ github.event.inputs.port }} >> cf.log 2>&1 &
